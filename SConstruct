@@ -9,7 +9,7 @@ env = excons.MakeBaseEnv()
 
 
 def ExpatName(static=True):
-   if static or sys.platform == "win32":
+   if static and sys.platform == "win32":
       return "libexpat"
    else:
       return "expat"
