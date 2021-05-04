@@ -35,3 +35,12 @@ expat/**/*.sdf
 expat/**/*.VC.db
 expat/tests/**/Debug/
 expat/tests/**/Release/
+
+
+/.build
+/.sconsign.dblite
+/excons.cache
+/*.cmake.config
+/*.cmake.outputs
+/release
+/debug
