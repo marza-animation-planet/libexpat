@@ -45,7 +45,7 @@ prjs = [
                      "EXPAT_BUILD_PKGCONFIG": 0,
                      "EXPAT_SHARED_LIBS": 0 if _static else 1,
                      "EXPAT_LARGE_SIZE": 1},
-      "cmake-cfgs": excons.CollectFiles(".", patterns=["CMakeLists.txt"], recursive=True, exclude=["zlib", "libjpeg-turbo"]),
+      "cmake-cfgs": excons.CollectFiles(".", patterns=["CMakeLists.txt"], recursive=True),
       "cmake-srcs": excons.CollectFiles("expat/src", patterns=["*.c"]),
       "cmake-outputs": ["include/expat.h",
                         "include/expat_config.h",
