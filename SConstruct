@@ -42,6 +42,7 @@ prjs = [
                      "EXPAT_BUILD_TESTS": 0,
                      "EXPAT_BUILD_DOCS": 0,
                      "EXPAT_ENABLE_INSTALL": 1,
+                     "EXPAT_BUILD_PKGCONFIG": 0,
                      "EXPAT_SHARED_LIBS": 0 if _static else 1,
                      "EXPAT_LARGE_SIZE": 1},
       "cmake-cfgs": excons.CollectFiles(".", patterns=["CMakeLists.txt"], recursive=True, exclude=["zlib", "libjpeg-turbo"]),

@@ -31,10 +31,17 @@
 set -e
 
 if [[ ${TRAVIS_OS_NAME} = osx ]]; then
+    latest_brew_python3_bin="$(ls -1d /usr/local/Cellar/python/3.*/bin | sort -n | tail -n1)"
+    export PATH="${latest_brew_python3_bin}${PATH:+:}${PATH}"
     export PATH="/usr/local/opt/coreutils/libexec/gnubin${PATH:+:}${PATH}"
+    export PATH="/usr/local/opt/findutils/libexec/gnubin${PATH:+:}${PATH}"
 elif [[ ${TRAVIS_OS_NAME} = linux ]]; then
-    export PATH="/usr/lib/llvm-9/bin:${PATH}"
+    export PATH="/usr/lib/llvm-11/bin:${PATH}"
 fi
+
+echo "New \${PATH}:"
+tr : '\n' <<<"${PATH}" | sed 's,^,- ,'
+echo
 
 PS4='# '
 set -x
@@ -45,22 +52,32 @@ cd expat
 if [[ ${MODE} = distcheck ]]; then
     ./configure ${CONFIGURE_ARGS}
     make distcheck
-
-    mkdir -p ~/rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
-    ln -v -s "$PWD"/expat-*.tar.bz2 ~/rpmbuild/SOURCES/
-    rpmbuild -ba expat.spec
 elif [[ ${MODE} = cmake-oos ]]; then
     mkdir build
     cd build
     cmake ${CMAKE_ARGS} ..
-    make VERBOSE=1 all test
+    make VERBOSE=1 CTEST_OUTPUT_ON_FAILURE=1 all test
     make DESTDIR="${PWD}"/ROOT install
     find ROOT -printf "%P\n" | sort
 elif [[ ${MODE} = cppcheck ]]; then
-    cppcheck --quiet --error-exitcode=1 .
+    cppcheck --version
+    find_args=(
+        -type f \(
+            -name \*.cpp
+            -o -name \*.c
+        \)
+        -not \(  # Exclude .c files that are merely included by other files
+            -name xmltok_ns.c
+            -o -name xmltok_impl.c
+        \)
+        -exec cppcheck --quiet --error-exitcode=1 --force {} +
+    )
+    find "${find_args[@]}"
 elif [[ ${MODE} = clang-format ]]; then
     ./apply-clang-format.sh
     git diff --exit-code
+elif [[ ${MODE} = coverage-sh ]]; then
+    ./coverage.sh
 else
     ./qa.sh ${CMAKE_ARGS}
 fi
