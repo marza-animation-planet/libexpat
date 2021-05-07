@@ -32,6 +32,12 @@ def RequireExpat(env, static=True):
 
 _static = (excons.GetArgument("expat-static", 1, int) != 0)
 
+if sys.platform != "win32":
+   envcf = os.environ.get("CFLAGS", "")
+   if not "-fPIC" in envcf:
+      envcf += " -fPIC"
+      os.environ["CFLAGS"] = envcf
+
 prjs = [
    {
       "name": "expat",
