@@ -5,6 +5,15 @@ import excons.cmake
 import SCons.Script # pylint: disable=import-error
 
 
+
+if sys.platform == "win32":
+   mscver = SCons.Script.ARGUMENTS.get("mscver", "14.1")
+   if float(mscver) < 14.1:
+      print("mscver >=14.1 required")
+      sys.exit(1)
+   SCons.Script.ARGUMENTS["mscver"] = mscver
+
+
 env = excons.MakeBaseEnv()
 
 
