@@ -5,12 +5,22 @@ import excons.cmake
 import SCons.Script # pylint: disable=import-error
 
 
+if sys.platform == "win32":
+   mscver = SCons.Script.ARGUMENTS.get("mscver", "11.0")
+   if float(mscver) < 11.0:
+      print("mscver >=11.0 required")
+      sys.exit(1)
+   SCons.Script.ARGUMENTS["mscver"] = mscver
+
+
 env = excons.MakeBaseEnv()
 
 
 def ExpatName(static=True):
-   if static and sys.platform == "win32":
-      return "libexpat"
+   if sys.platform == "win32":
+      # EXPAT_MSVC_STATIC_CRT is hardcoded to 0, static suffix won't be 'MT'
+      # EXPAT_CHAR_TYPE hardcoded to 'char', no extra 'w' suffix
+      return ("libexpatMD" if static else "libexpat")
    else:
       return "expat"
 
@@ -41,6 +51,8 @@ prjs = [
                      "EXPAT_BUILD_EXAMPLES": 0,
                      "EXPAT_BUILD_TESTS": 0,
                      "EXPAT_BUILD_DOCS": 0,
+                     "EXPAT_CHAR_TYPE": "char",
+                     "EXPAT_MSVC_STATIC_CRT": 0,
                      "EXPAT_ENABLE_INSTALL": 1,
                      "EXPAT_SHARED_LIBS": 0 if _static else 1,
                      "EXPAT_LARGE_SIZE": 1},
