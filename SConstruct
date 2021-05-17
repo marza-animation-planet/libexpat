@@ -9,8 +9,10 @@ env = excons.MakeBaseEnv()
 
 
 def ExpatName(static=True):
-   if static and sys.platform == "win32":
-      return "libexpatMD"
+   if sys.platform == "win32":
+      # EXPAT_MSVC_STATIC_CRT is hardcoded to 0, static suffix can be 'MT'
+      # EXPAT_CHAR_TYPE is hardcoded to 'char', suffix won't include 'w'
+      return ("libexpatMD" if static else "libexpat")
    else:
       return "expat"
 
@@ -51,6 +53,7 @@ prjs = [
                      "EXPAT_BUILD_PKGCONFIG": 0,
                      "EXPAT_SHARED_LIBS": 0 if _static else 1,
                      "EXPAT_LARGE_SIZE": 1,
+                     "EXPAT_CHAR_TYPE": "char",
                      "EXPAT_MSVC_STATIC_CRT": 0,
                      "CMAKE_INSTALL_LIBDIR": "lib"},
       "cmake-cfgs": excons.CollectFiles(".", patterns=["CMakeLists.txt"], recursive=True),
