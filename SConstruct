@@ -21,7 +21,12 @@ def ExpatName(static=True):
    if sys.platform == "win32":
       # EXPAT_MSVC_STATIC_CRT is hardcoded to 0, static suffix can be 'MT'
       # EXPAT_CHAR_TYPE is hardcoded to 'char', suffix won't include 'w'
-      return ("libexpatMD" if static else "libexpat")
+      libname = "libexpat"
+      if excons.GetArgument("debug", 0, int) != 0:
+         libname += "d"
+      if static:
+         libname += "MD"
+      return libname
    else:
       return "expat"
 
