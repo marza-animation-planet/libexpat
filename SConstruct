@@ -54,12 +54,16 @@ def preserve_variable(env, name):
 
 if not env.GetOption("clean"):
    conf = SCons.Script.Configure(env)
-   with preserve_variable(conf.env, "CFLAGS"):
-      conf.env.Append(CFLAGS=["-fvisibility=hidden"])
-      expatconfig["FLAG_VISIBILITY"] = conf.CheckCC()
-   with preserve_variable(conf.env, "CFLAGS"):
-      conf.env.Append(CFLAGS=["-fno-strict-aliasing"])
-      expatconfig["FLAG_NO_STRICT_ALIASING"] = conf.CheckCC()
+   if sys.platform != "win32":
+      with preserve_variable(conf.env, "CFLAGS"):
+         conf.env.Append(CFLAGS=["-fvisibility=hidden"])
+         expatconfig["FLAG_VISIBILITY"] = conf.CheckCC()
+      with preserve_variable(conf.env, "CFLAGS"):
+         conf.env.Append(CFLAGS=["-fno-strict-aliasing"])
+         expatconfig["FLAG_NO_STRICT_ALIASING"] = conf.CheckCC()
+   else:
+      expatconfig["FLAG_VISIBILITY"] = False
+      expatconfig["FLAG_NO_STRICT_ALIASING"] = False
    expatconfig["HAVE_DLFCN_H"] = conf.CheckHeader("dlfcn.h")
    expatconfig["HAVE_FCNTL_H"] = conf.CheckHeader("fcntl.h")
    expatconfig["HAVE_INTTYPES_H"] = conf.CheckHeader("inttypes.h")
@@ -137,10 +141,6 @@ GenerateConfig(excons.OutputBaseDirectory() + "/include/expat_config.h", "expat_
 defs = ["XML_BUILDING_EXPAT", "HAVE_EXPAT_CONFIG_H"]
 cflags = []
 
-_static = (excons.GetArgument("expat-static", 1, int) != 0)
-if _static:
-   defs.append("XML_STATIC")
-
 chart = excons.GetArgument("expat-char-type", "char")
 if not chart in ("char", "ushort", "wchar_t"):
    SCons.Script.Exit(1)
@@ -163,17 +163,28 @@ if excons.GetArgument("expat-large-size", 0, int) != 0:
 if excons.GetArgument("expat-min-size", 0, int) != 0:
    defs.append("XML_MIN_SIZE")
 
+_static = (excons.GetArgument("expat-static", 1, int) != 0)
+if _static:
+   defs.append("XML_STATIC")
+elif sys.platform == "win32":
+   vismap = "expat/lib/libexpat%s.def" % ("w" if chart != "char" else "")
+   # Option 2:
+   #defs.append("XMLIMPORT=__declspec(dllexport)")
+else:
+   vismap = None
+
 
 # Exports
 
 def ExpatName(static=True):
    if sys.platform == "win32":
-      # EXPAT_MSVC_STATIC_CRT is hardcoded to 0, static suffix can be 'MT'
-      # EXPAT_CHAR_TYPE is hardcoded to 'char', suffix won't include 'w'
       libname = "libexpat"
+      if excons.GetArgument("expat-char-type", "char") != "char":
+         libname += "w"
       if excons.GetArgument("debug", 0, int) != 0:
          libname += "d"
       if static:
+         # In cmake, EXPAT_MSVC_STATIC_CRT can be set to statically link runtime, suffix should be 'MT' instead of 'MD'
          libname += "MD"
       return libname
    else:
@@ -204,6 +215,7 @@ prjs = [
       "type": "staticlib" if _static else "sharedlib",
       "defs": defs,
       "symvis": ("hidden" if (expatconfig.get("FLAG_VISIBILITY") or _static) else "default"),
+      "vismap": vismap,
       "ccflags": cflags,
       "version": expatconfig["PACKAGE_VERSION"],
       "soname": "lib%s.so.%s" % (ExpatName(False), expat_version[0]),
