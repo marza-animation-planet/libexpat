@@ -92,7 +92,7 @@
 #  define XML_ENABLE_VISIBILITY 0
 #endif
 
-#if ! defined(XMLIMPORT) && XML_ENABLE_VISIBILITY
+#if ! defined(XML_STATIC) && ! defined(XMLIMPORT) && XML_ENABLE_VISIBILITY
 #  define XMLIMPORT __attribute__((visibility("default")))
 #endif
 

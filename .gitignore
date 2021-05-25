@@ -44,3 +44,6 @@ expat/tests/**/Release/
 /*.cmake.outputs
 /release
 /debug
+/.sconf_temp
+/config.log
+/expat.status
