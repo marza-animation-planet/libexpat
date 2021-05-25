@@ -3,92 +3,92 @@
 
 /* Define to 1 if you have the `arc4random' function. */
 #if @HAVE_ARC4RANDOM@
-   #define HAVE_ARC4RANDOM
+#  define HAVE_ARC4RANDOM
 #endif
 
 /* Define to 1 if you have the `arc4random_buf' function. */
 #if @HAVE_ARC4RANDOM_BUF@
-   #define HAVE_ARC4RANDOM_BUF
+#  define HAVE_ARC4RANDOM_BUF
 #endif
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #if @HAVE_DLFCN_H@
-   #define HAVE_DLFCN_H
+#  define HAVE_DLFCN_H
 #endif
 
 /* Define to 1 if you have the <fcntl.h> header file. */
 #if @HAVE_FCNTL_H@
-   #define HAVE_FCNTL_H
+#  define HAVE_FCNTL_H
 #endif
 
 /* Define to 1 if you have the `getpagesize' function. */
 #if @HAVE_GETPAGESIZE@
-   #define HAVE_GETPAGESIZE
+#  define HAVE_GETPAGESIZE
 #endif
 
 /* Define to 1 if you have the `getrandom' function. */
 #if @HAVE_GETRANDOM@
-   #define HAVE_GETRANDOM
+#  define HAVE_GETRANDOM
 #endif
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #if @HAVE_INTTYPES_H@
-   #define HAVE_INTTYPES_H
+#  define HAVE_INTTYPES_H
 #endif
 
 /* Define to 1 if you have the `bsd' library (-lbsd). */
 #if @HAVE_LIBBSD@
-   #define HAVE_LIBBSD
+#  define HAVE_LIBBSD
 #endif
 
 /* Define to 1 if you have the <memory.h> header file. */
 #if @HAVE_MEMORY_H@
-   #define HAVE_MEMORY_H
+#  define HAVE_MEMORY_H
 #endif
 
 /* Define to 1 if you have a working `mmap' system call. */
 #if @HAVE_MMAP@
-   #define HAVE_MMAP
+#  define HAVE_MMAP
 #endif
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #if @HAVE_STDINT_H@
-   #define HAVE_STDINT_H
+#  define HAVE_STDINT_H
 #endif
 
 /* Define to 1 if you have the <stdlib.h> header file. */
 #if @HAVE_STDLIB_H@
-   #define HAVE_STDLIB_H
+#  define HAVE_STDLIB_H
 #endif
 
 /* Define to 1 if you have the <strings.h> header file. */
 #if @HAVE_STRINGS_H@
-   #define HAVE_STRINGS_H
+#  define HAVE_STRINGS_H
 #endif
 
 /* Define to 1 if you have the <string.h> header file. */
 #if @HAVE_STRING_H@
-   #define HAVE_STRING_H
+#  define HAVE_STRING_H
 #endif
 
 /* Define to 1 if you have `syscall' and `SYS_getrandom'. */
 #if @HAVE_SYSCALL_GETRANDOM@
-   #define HAVE_SYSCALL_GETRANDOM
+#  define HAVE_SYSCALL_GETRANDOM
 #endif
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #if @HAVE_SYS_STAT_H@
-   #define HAVE_SYS_STAT_H
+#  define HAVE_SYS_STAT_H
 #endif
 
 /* Define to 1 if you have the <sys/types.h> header file. */
 #if @HAVE_SYS_TYPES_H@
-   #define HAVE_SYS_TYPES_H
+#  define HAVE_SYS_TYPES_H
 #endif
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #if @HAVE_UNISTD_H@
-   #define HAVE_UNISTD_H
+#  define HAVE_UNISTD_H
 #endif
 
 /* Name of package */
@@ -114,18 +114,18 @@
 
 /* Define to 1 if you have the ANSI C header files. */
 #if @STDC_HEADERS@
-   #define STDC_HEADERS
+#  define STDC_HEADERS
 #endif
 
 /* whether byteorder is bigendian */
 #if @WORDS_BIGENDIAN@
-   #define WORDS_BIGENDIAN
+#  define WORDS_BIGENDIAN
 #endif
 
 /* Define to allow retrieving the byte offsets for attribute names and values.
  */
 #if @XML_ATTR_INFO@
-   #define XML_ATTR_INFO
+#  define XML_ATTR_INFO
 #endif
 
 /* Define to specify how much context to retain around the current parse
@@ -134,32 +134,32 @@
 
 /* Define to include code reading entropy from `/dev/urandom'. */
 #if ! defined(_WIN32)
-   #if @XML_DEV_URANDOM@
-      #define XML_DEV_URANDOM
-   #endif
+#  if @XML_DEV_URANDOM@
+#     define XML_DEV_URANDOM
+#  endif
 #endif
 
 /* Define to make parameter entity parsing functionality available. */
 #if @XML_DTD@
-   #define XML_DTD
+#  define XML_DTD
 #endif
 
 /* Define to make XML Namespaces functionality available. */
 #if @XML_NS@
-   #define XML_NS
+#  define XML_NS
 #endif
 
 /* Define to __FUNCTION__ or "" if `__func__' does not conform to ANSI C. */
 #ifdef _MSC_VER
-   #define __func__ __FUNCTION__
+#  define __func__ __FUNCTION__
 #endif
 
 /* Define to `long' if <sys/types.h> does not define. */
-#if "@OFF_T@" != "off_t"
-   #define off_t @OFF_T@
+#if @OFF_T.defined@
+#  define off_t @OFF_T@
 #endif
 
 /* Define to `unsigned' if <sys/types.h> does not define. */
-#if "@SIZE_T@" != "size_t"
+#if @SIZE_T.defined@
 #  define size_t @SIZE_T@
 #endif

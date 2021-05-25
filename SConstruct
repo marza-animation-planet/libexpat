@@ -8,6 +8,8 @@ import excons.config
 import SCons.Script # pylint: disable=import-error
 
 
+expat_version = (2, 3, 0)
+
 
 if sys.platform == "win32":
    mscver = SCons.Script.ARGUMENTS.get("mscver", "14.1")
@@ -18,35 +20,6 @@ if sys.platform == "win32":
 
 
 env = excons.MakeBaseEnv()
-
-
-def ExpatName(static=True):
-   if sys.platform == "win32":
-      # EXPAT_MSVC_STATIC_CRT is hardcoded to 0, static suffix can be 'MT'
-      # EXPAT_CHAR_TYPE is hardcoded to 'char', suffix won't include 'w'
-      libname = "libexpat"
-      if excons.GetArgument("debug", 0, int) != 0:
-         libname += "d"
-      if static:
-         libname += "MD"
-      return libname
-   else:
-      return "expat"
-
-def ExpatPath(static=True):
-   name = ExpatName(static)
-   if sys.platform == "win32":
-      libname = name + ".lib"
-   else:
-      libname = "lib" + name + (".a" if static else excons.SharedLibraryLinkExt())
-   return excons.OutputBaseDirectory() + "/lib/" + libname
-
-def RequireExpat(env, static=True):
-   if static:
-      env.Append(CPPDEFINES=["XML_STATIC"])
-   env.Append(CPPPATH=[excons.OutputBaseDirectory() + "/include"])
-   env.Append(LIBPATH=[excons.OutputBaseDirectory() + "/lib"])
-   excons.Link(env, ExpatPath(static), static=static, force=True, silent=True)
 
 
 # Configure
@@ -61,7 +34,7 @@ else:
    urandom = 0
 
 expatconfig = {"PACKAGE_NAME": "expat",
-               "PACKAGE_VERSION": "2.3.0",
+               "PACKAGE_VERSION": ".".join(map(str, expat_version)),
                "XML_DTD": dtd,
                "XML_NS": ns,
                "XML_DEV_URANDOM": urandom,
@@ -112,8 +85,6 @@ if not env.GetOption("clean"):
       if not conf.CheckType("size_t", "#include <sys/types.h>\n"):
          print("'size_t' not defined")
          SCons.Script.Exit(1)
-      expatconfig["OFF_T"] = "off_t"
-      expatconfig["SIZE_T"] = "size_t"
    else:
       expatconfig["OFF_T"] = "long"
       expatconfig["SIZE_T"] = "unsigned"
@@ -154,15 +125,16 @@ if not env.GetOption("clean"):
       SCons.Script.Exit(1)
    env = conf.Finish()
 
-pprint.pprint(expatconfig)
-
-GenerateConfig = excons.config.AddGenerator(env, "expat", expatconfig)
+def _bool2str(val):
+   return ("1" if val else "0")
+GenerateConfig = excons.config.AddGenerator(env, "expat", expatconfig, converters={bool: _bool2str})
 
 GenerateConfig(excons.OutputBaseDirectory() + "/include/expat_config.h", "expat_config.h.in")
 
+
 # Build options
 
-defs = ["HAVE_EXPAT_CONFIG_H"]
+defs = ["XML_BUILDING_EXPAT", "HAVE_EXPAT_CONFIG_H"]
 cflags = []
 
 _static = (excons.GetArgument("expat-static", 1, int) != 0)
@@ -180,12 +152,50 @@ elif chart != "char":
       if sys.platform != "win32":
          cflags.append("-fshort-wchar")
 
+if expatconfig.get("FLAG_NO_STRICT_ALIASING"):
+   cflags.append("-fno-strict-aliasing")
+
+if expatconfig.get("FLAG_VISIBILITY"):
+   defs.append("XML_ENABLE_VISIBILITY=1")
+
 if excons.GetArgument("expat-large-size", 0, int) != 0:
    defs.append("XML_LARGE_SIZE")
 if excons.GetArgument("expat-min-size", 0, int) != 0:
    defs.append("XML_MIN_SIZE")
 
-#SCons.Script.Exit(0)
+
+# Exports
+
+def ExpatName(static=True):
+   if sys.platform == "win32":
+      # EXPAT_MSVC_STATIC_CRT is hardcoded to 0, static suffix can be 'MT'
+      # EXPAT_CHAR_TYPE is hardcoded to 'char', suffix won't include 'w'
+      libname = "libexpat"
+      if excons.GetArgument("debug", 0, int) != 0:
+         libname += "d"
+      if static:
+         libname += "MD"
+      return libname
+   else:
+      return "expat"
+
+def ExpatPath(static=True):
+   name = ExpatName(static)
+   if sys.platform == "win32":
+      libname = name + ".lib"
+   else:
+      libname = "lib" + name + (".a" if static else excons.SharedLibraryLinkExt())
+   return excons.OutputBaseDirectory() + "/lib/" + libname
+
+def RequireExpat(env, static=True):
+   if static:
+      env.Append(CPPDEFINES=["XML_STATIC"])
+   env.Append(CPPPATH=[excons.OutputBaseDirectory() + "/include"])
+   env.Append(LIBPATH=[excons.OutputBaseDirectory() + "/lib"])
+   excons.Link(env, ExpatPath(static), static=static, force=True, silent=True)
+
+
+# Targets
 
 prjs = [
    {
@@ -193,48 +203,30 @@ prjs = [
       "alias": "expat",
       "type": "staticlib" if _static else "sharedlib",
       "defs": defs,
-      "cflags": cflags,
+      "symvis": ("hidden" if (expatconfig.get("FLAG_VISIBILITY") or _static) else "default"),
+      "ccflags": cflags,
+      "version": expatconfig["PACKAGE_VERSION"],
+      "soname": "lib%s.so.%s" % (ExpatName(False), expat_version[0]),
+      "install_name": "lib%s.%s.so" % (ExpatName(False), expat_version[0]),
+      "install": {"include": ["expat/lib/expat.h",
+                              "expat/lib/expat_external.h"]},
       "srcs": ["expat/lib/xmltok.c",
                "expat/lib/xmlparse.c",
                "expat/lib/xmlrole.c"]
    }
 ]
 
-"""
-if sys.platform != "win32":
-   envcf = os.environ.get("CFLAGS", "")
-   if not "-fPIC" in envcf:
-      envcf += " -fPIC"
-      os.environ["CFLAGS"] = envcf
-
-prjs = [
-   {
-      "name": "expat",
-      "type": "cmake",
-      "cmake-root": "expat",
-      "cmake-opts": {"EXPAT_BUILD_TOOLS": 0,
-                     "EXPAT_BUILD_EXAMPLES": 0,
-                     "EXPAT_BUILD_TESTS": 0,
-                     "EXPAT_BUILD_DOCS": 0,
-                     "EXPAT_ENABLE_INSTALL": 1,
-                     "EXPAT_BUILD_PKGCONFIG": 0,
-                     "EXPAT_SHARED_LIBS": 0 if _static else 1,
-                     "EXPAT_LARGE_SIZE": 1,
-                     "EXPAT_CHAR_TYPE": "char",
-                     "EXPAT_MSVC_STATIC_CRT": 0,
-                     "CMAKE_INSTALL_LIBDIR": "lib"},
-      "cmake-cfgs": excons.CollectFiles(".", patterns=["CMakeLists.txt"], recursive=True),
-      "cmake-srcs": excons.CollectFiles("expat/src", patterns=["*.c"]),
-      "cmake-outputs": ["include/expat.h",
-                        "include/expat_config.h",
-                        "include/expat_external.h",
-                        ExpatPath(static=_static)]
-   }
-]
-"""
-
 excons.AddHelpOptions(expat="""EXPAT OPTIONS
-  expat-static=0|1   : Toggle between static and shared library build [1]""")
+  expat-static=0|1                    : Toggle between static and shared library build               [1]
+  expat-dtd=0|1                       : Enable DTD support                                           [1]
+  expat-ns=0|1                        : Enable namespace support                                     [1]
+  expat-char-type=char|ushort|wchar_t : Character type to use                                        [char]
+  expat-large-size=0|1                : Use 64 bits offsets                                          [0]
+  expat-min-size=0|1                  : Get a smaller (but slower) parser                            [0]
+  expat-context-bytes=<int>           : How much context to retain around current parse point        [1024]
+  expat-attr-info=0|1                 : Allow retrieving byte offsets for attribute names and values [0]
+  expat-dev-urandom=0|1               : Include code reading entropy from /dev/urandom               [1] (no effect on windows)
+""")
 
 excons.DeclareTargets(env, prjs)
 
