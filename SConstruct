@@ -164,14 +164,13 @@ if excons.GetArgument("expat-min-size", 0, int) != 0:
    defs.append("XML_MIN_SIZE")
 
 _static = (excons.GetArgument("expat-static", 1, int) != 0)
+vismap = None
 if _static:
    defs.append("XML_STATIC")
 elif sys.platform == "win32":
    vismap = "expat/lib/libexpat%s.def" % ("w" if chart != "char" else "")
    # Option 2:
    #defs.append("XMLIMPORT=__declspec(dllexport)")
-else:
-   vismap = None
 
 
 # Exports
