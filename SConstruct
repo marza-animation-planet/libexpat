@@ -53,7 +53,7 @@ def preserve_variable(env, name):
       env[name] = oldvar
 
 if not env.GetOption("clean"):
-   conf = SCons.Script.Configure(env)
+   conf = SCons.Script.Configure(env, conf_dir=excons.abspath(".sconf_temp"))
    if sys.platform != "win32":
       with preserve_variable(conf.env, "CFLAGS"):
          conf.env.Append(CFLAGS=["-fvisibility=hidden"])
